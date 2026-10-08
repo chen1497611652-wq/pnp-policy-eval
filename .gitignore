@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 虚拟环境
+.venv/
+venv/
+
+# 数据与权重（体积大，不该进版本库）
+data/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# 结果产物
+results/*.jsonl
+results/*.png
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
