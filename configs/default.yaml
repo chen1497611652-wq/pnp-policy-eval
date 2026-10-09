@@ -1,0 +1,36 @@
+paths:
+  # 上游 MuJoCo PnP 工程根目录。
+  project_root: D:/lerobot-mujoco-tutorial
+  # 结果与视频输出目录
+  output_root: D:/lerobot-mujoco-tutorial/outputs/d14
+
+dataset:
+  # dataset_stats(归一化统计量)的来源。注意：这必须和权重训练数据保持一致
+  # 否则 state 会被错误的均值方差归一化 ————见 finding-01
+  repo_id: datawhale_eai_pnp_language
+  root: D:/lerobot-mujoco-tutorial/omy_pnp_language
+
+policy:
+  type: smolvla            # act | smolvla | pi0
+  # 权重目录。留空则回退到 <model_root>/<type>_rocm_full
+  path: D:/lerobot-mujoco-tutorial/ckpt/every-embodied-smolvla/weights
+  device: cuda
+
+env:
+  xml: asset/example_scene_y2.xml     # 相对 project_root
+  action_type: joint_angle
+  state_type: joint_angle             # ← D18 要动的就是这一行
+  state_slice: 6                      # get_joint_state()[:6]
+  hz: 20
+  task_text: "Place the red mug on the plate."
+
+eval:
+  seeds: [6, 7, 8, 9, 10, 11]
+  max_action_steps: 300
+
+video:
+  stride: 2
+  fps: 10
+
+runtime:
+  render: false

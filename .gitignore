@@ -16,7 +16,8 @@ data/
 *.pth
 
 # 结果产物
-results/*.jsonl
+# 视频体积大, 不进版本库; JSONL 是证据, 要进
+*.mp4
 results/*.png
 
 # 编辑器
