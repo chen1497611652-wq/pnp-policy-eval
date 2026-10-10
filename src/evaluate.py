@@ -89,7 +89,7 @@ def load_config(path: Path) -> None:
 
 import numpy as np
 import torch
-
+from src.success import read_metrics, update_metrics
 
 def require_layout() -> None:
     required = [
@@ -164,57 +164,17 @@ def load_policy(policy_type: str, policy_path: Path):
     policy.eval()
     return policy
 
-
-def strict_snapshot(
-    env,
-    initial_plate_pos: np.ndarray,
-    max_target_lift: float,
-    max_lifted_run: int,
-    stable_place_steps: int,
-) -> tuple[dict, int]:
-    """按照 Notebook 11 的几何、抬升、直立、释放和稳定条件判定成功。"""
-    target_pos = np.asarray(env.env.get_p_body(env.obj_target), dtype=np.float64)
-    plate_pos = np.asarray(env.env.get_p_body("body_obj_plate_11"), dtype=np.float64)
-    target_rotation = np.asarray(
-        env.env.get_R_body(env.obj_target), dtype=np.float64
+##接受前几步积累的统计量，返回一个包含全部指标的字典和更新后的 stable_place_steps
+def strict_snapshot(env, initial_plate_pos, max_target_lift,
+                    max_lifted_run, stable_place_steps):
+    """薄适配层：签名与两个调用点保持不变，实现搬到 src/success.py。"""
+    return update_metrics(
+        read_metrics(env, initial_plate_pos),
+        max_target_lift=max_target_lift,
+        max_lifted_run=max_lifted_run,
+        stable_place_steps=stable_place_steps,
     )
 
-    xy_dist = float(np.linalg.norm(target_pos[:2] - plate_pos[:2]))
-    upright_cos = float(target_rotation[2, 2])
-    gripper_open = bool(float(env.env.get_qpos_joint("rh_r1")[0]) < 0.1)
-    tcp_high = bool(float(env.env.get_p_body("tcp_link")[2]) > 0.9)
-    legacy_success = bool(env.check_success())
-    plate_xy_displacement = float(
-        np.linalg.norm(plate_pos[:2] - initial_plate_pos[:2])
-    )
-
-    placement_candidate = bool(
-        legacy_success
-        and max_target_lift >= 0.03
-        and max_lifted_run >= 3
-        and upright_cos >= 0.7
-        and abs(float(target_pos[2] - plate_pos[2])) < 0.08
-        and plate_xy_displacement < 0.05
-        and gripper_open
-        and tcp_high
-    )
-    stable_place_steps = stable_place_steps + 1 if placement_candidate else 0
-    physical_success = bool(placement_candidate and stable_place_steps >= 5)
-    return {
-        "legacy_success": legacy_success,
-        "physical_success": physical_success,
-        "xy_dist": xy_dist,
-        "target_z": float(target_pos[2]),
-        "plate_z": float(plate_pos[2]),
-        "max_target_lift": float(max_target_lift),
-        "max_lifted_run": int(max_lifted_run),
-        "upright_cos": upright_cos,
-        "plate_xy_displacement": plate_xy_displacement,
-        "placement_candidate": placement_candidate,
-        "stable_place_steps": int(stable_place_steps),
-        "gripper_open": gripper_open,
-        "tcp_high": tcp_high,
-    }, stable_place_steps
 
 
 def run_one_seed(policy, seed: int) -> dict:
