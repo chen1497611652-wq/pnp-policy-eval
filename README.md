@@ -11,3 +11,10 @@ Copyright (c) Datawhale and contributors。
 
 本项目对其的改动：配置外置到 `configs/default.yaml`；移除模块级 `argparse` 与 `os.chdir`；
 `video_io` 内联；`state_type` / `action_type` / 状态切片长度参数化。
+
+## 发现
+
+- [`docs/finding-01-action-semantics.md`](docs/finding-01-action-semantics.md)
+  —— 教程采集脚本把 `action` 记成实测关节角而非命令目标，
+  导致策略学到的只是静态正运动学映射。含可复现的 FK 检验工具
+  （`src/fk_check.py`）。
