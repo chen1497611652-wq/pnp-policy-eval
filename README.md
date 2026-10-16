@@ -18,3 +18,9 @@ Copyright (c) Datawhale and contributors。
   —— 教程采集脚本把 `action` 记成实测关节角而非命令目标，
   导致策略学到的只是静态正运动学映射。含可复现的 FK 检验工具
   （`src/fk_check.py`）。
+
+- [`docs/finding-02-nondeterminism.md`](docs/finding-02-nondeterminism.md)
+  —— 教程评测脚本从未给模型播种（`seed` 只固定了杯子摆在哪，
+  管不到 flow matching 每步现抽的噪声），同一 seed 跑两次
+  步数与结局都可能不同。含可复现的逐位比对工具
+  （`src/nondeterminism_check.py`）。
