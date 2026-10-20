@@ -1,0 +1,35 @@
+# DAY18 双杯泛化试跑配置：保留相对单杯采集侧的物体与初始化差异。
+# 单杯对照尚未完成；双杯失败不能单独用于判断泛化不足。
+paths:
+  project_root: D:/lerobot-mujoco-tutorial
+  output_root: D:/lerobot-mujoco-tutorial/outputs/d18_act_y_seed6
+
+dataset:
+  # 与当前可核实的训练来源对齐；最终统计量还需检查加载后的模型 buffer。
+  repo_id: datawhale_eai_pnp
+  root: D:/lerobot-mujoco-tutorial/demo_data
+
+policy:
+  type: act
+  path: D:/lerobot-mujoco-tutorial/ckpt/act_y
+  device: cuda
+
+env:
+  # 当前评测使用 SimpleEnv2；不能仅换成单杯 XML，需先核对环境接口。
+  xml: asset/example_scene_y2.xml
+  action_type: joint_angle
+  state_type: ee_pose
+  state_slice: 6
+  hz: 20
+  task_text: "Place the red mug on the plate."
+
+eval:
+  seeds: [6]
+  max_action_steps: 300
+
+video:
+  stride: 2
+  fps: 10
+
+runtime:
+  render: false

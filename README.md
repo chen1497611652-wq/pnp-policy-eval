@@ -12,6 +12,13 @@ Copyright (c) Datawhale and contributors。
 本项目对其的改动：配置外置到 `configs/default.yaml`；移除模块级 `argparse` 与 `os.chdir`；
 `video_io` 内联；`state_type` / `action_type` / 状态切片长度参数化。
 
+`src/single_cup_env.py` 的初始化适配同样依据该教程的 `mujoco_env/y_env2.py`，
+沿用原控制与判定，仅支持单杯及演示记录的物体起点。使用独立配置运行：
+
+```powershell
+python tools/trace_rollout.py --config configs/act_y_singlecup_demo_120s.yaml --single-cup-demo
+```
+
 ## 发现
 
 - [`docs/finding-01-action-semantics.md`](docs/finding-01-action-semantics.md)

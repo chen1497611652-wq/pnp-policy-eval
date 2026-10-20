@@ -176,8 +176,28 @@ def strict_snapshot(env, initial_plate_pos, max_target_lift,
     )
 
 
+def read_state(env, state_type: str, state_slice: int) -> np.ndarray:
+    # 根据类型，读取对应的状态
+    if state_type == "joint_angle":
+        state = env.get_joint_state()
+    elif state_type == "ee_pose":
+        state = env.get_ee_pose()
+    else:
+        raise ValueError(f"不支持的状态类型：{state_type!r}")
 
-def run_one_seed(policy, seed: int) -> dict:
+    # 检查要取的数量是否合理
+    if state_slice <= 0 or state_slice > len(state):
+        raise ValueError(
+            f"state_slice 必须在 1 到 {len(state)} 之间，"
+            f"实际收到：{state_slice}"
+        )
+
+    # 取出前 state_slice 项
+    return state[:state_slice]
+
+
+def run_one_seed(policy, seed: int, trace_callback=None, env_factory=None) -> dict:
+    """运行一个 seed；可选回调只记录观测和命令，不额外推进物理或推理。"""
     from src.video_io import write_video
     from mujoco_env.y_env2 import SimpleEnv2
 
@@ -186,7 +206,8 @@ def run_one_seed(policy, seed: int) -> dict:
 
     xml_path = PROJECT_ROOT / ENV_XML
     
-    env = SimpleEnv2(
+    create_env = SimpleEnv2 if env_factory is None else env_factory
+    env = create_env(
         str(xml_path),
         action_type=ACTION_TYPE,
         state_type=STATE_TYPE,
@@ -218,7 +239,7 @@ def run_one_seed(policy, seed: int) -> dict:
             if not env.env.loop_every(HZ=ENV_HZ):
                 continue
 
-            state = env.get_joint_state()[:STATE_SLICE]
+            state = read_state(env, STATE_TYPE, STATE_SLICE)
             agent_image, wrist_image = env.grab_image()
             observation = {
                 "observation.state": torch.as_tensor(
@@ -240,6 +261,9 @@ def run_one_seed(policy, seed: int) -> dict:
                     .numpy()
                 )
             action = action.astype(np.float32)
+            if trace_callback is not None:
+                raw_action = action.copy()
+                held_target = np.asarray(env.q, dtype=np.float64).copy()
             action[6] = np.clip(action[6], 0.0, 1.0)
             env.step(action)
 
@@ -255,6 +279,25 @@ def run_one_seed(policy, seed: int) -> dict:
                 max_lifted_run,
                 stable_place_steps,
             )
+
+            if trace_callback is not None:
+                # 当前物理状态由先前命令产生；本行新 action 要到下一次 step_env 才执行。
+                trace_callback({
+                    "seed": int(seed),
+                    "step": int(action_step),
+                    "control_time_s": action_step / ENV_HZ,
+                    "sim_time_s": float(env.env.data.time),
+                    "state": np.asarray(state).tolist(),
+                    "ee_pose": np.asarray(env.get_ee_pose()).tolist(),
+                    "joint_state": np.asarray(env.get_joint_state()).tolist(),
+                    "held_target": held_target.tolist(),
+                    "action_raw": raw_action.tolist(),
+                    "action_sent": action.tolist(),
+                    "target_pos": np.asarray(env.env.get_p_body(env.obj_target)).tolist(),
+                    "plate_pos": np.asarray(env.env.get_p_body("body_obj_plate_11")).tolist(),
+                    "gripper_qpos": float(env.env.get_qpos_joint("rh_r1")[0]),
+                    "metrics": dict(final),
+                })
 
             if action_step % VIDEO_STRIDE == 0:
                 frames.append(np.asarray(agent_image).copy())

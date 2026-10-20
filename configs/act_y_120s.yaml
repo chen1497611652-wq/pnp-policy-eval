@@ -1,0 +1,32 @@
+# DAY18 双杯长试跑：仅增加时长及更换输出目录，模型、场景、seed 保持不变。
+paths:
+  project_root: D:/lerobot-mujoco-tutorial
+  output_root: D:/lerobot-mujoco-tutorial/outputs/d18_act_y_seed6_120s
+
+dataset:
+  repo_id: datawhale_eai_pnp
+  root: D:/lerobot-mujoco-tutorial/demo_data
+
+policy:
+  type: act
+  path: D:/lerobot-mujoco-tutorial/ckpt/act_y
+  device: cuda
+
+env:
+  xml: asset/example_scene_y2.xml
+  action_type: joint_angle
+  state_type: ee_pose
+  state_slice: 6
+  hz: 20
+  task_text: "Place the red mug on the plate."
+
+eval:
+  seeds: [6]
+  max_action_steps: 2400
+
+video:
+  stride: 2
+  fps: 10
+
+runtime:
+  render: false

@@ -1,0 +1,27 @@
+# 单杯基线：物体起点取 demo_data 首行 obj_init，由 --single-cup-demo 启用适配。
+# seed 6 控制推理随机性；本配置物体位置来自数据，非 seed 6 随机摆放。
+paths:
+  project_root: D:/lerobot-mujoco-tutorial
+  output_root: D:/lerobot-mujoco-tutorial/outputs/d18_act_y_singlecup_demo_seed6_120s
+dataset:
+  repo_id: datawhale_eai_pnp
+  root: D:/lerobot-mujoco-tutorial/demo_data
+policy:
+  type: act
+  path: D:/lerobot-mujoco-tutorial/ckpt/act_y
+  device: cuda
+env:
+  xml: asset/example_scene_y.xml
+  action_type: joint_angle
+  state_type: ee_pose
+  state_slice: 6
+  hz: 20
+  task_text: "Place the red mug on the plate."
+eval:
+  seeds: [6]
+  max_action_steps: 2400
+video:
+  stride: 2
+  fps: 10
+runtime:
+  render: false

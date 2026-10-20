@@ -1,0 +1,27 @@
+{
+  "date_local": "2026-10-20",
+  "timezone": "Asia/Shanghai",
+  "archive": "Exact copies; these are different conditions, not repeated trials of identical settings.",
+  "files": [
+    {
+      "file": "results/act_y_d18_double_15s_seed6.jsonl",
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\d18_act_y_seed6\\act_closed_loop\\results.jsonl",
+      "sha256": "f3ec9586b058329d076afa7e2febf7288cdb82180365dd0444eba38062fa2c68"
+    },
+    {
+      "file": "results/act_y_d18_double_120s_seed6.jsonl",
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\d18_act_y_seed6_120s\\act_closed_loop\\results.jsonl",
+      "sha256": "a0afe552e4c1ae311852b0164cfdb54d7e4f9ad14009c018b17f3c07a81c4f51"
+    },
+    {
+      "file": "results/act_y_d18_singlecup_demo_120s_seed6.jsonl",
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\d18_act_y_singlecup_demo_seed6_120s\\act_closed_loop\\results.jsonl",
+      "sha256": "8d891b066ffdf4e94f4d181a079c4825d0809b98b63d811adffb08de7d655508"
+    },
+    {
+      "file": "results/act_y_d18_training_fit_metrics.json",
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\d18_act_y_training_check\\metrics.json",
+      "sha256": "37aa357653e074ac28fe93dd08d3e4301a10422f00219bfbac6b9ef46cae1195"
+    }
+  ]
+}
