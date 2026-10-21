@@ -1,10 +1,9 @@
-"""有限微调试验：重复观测保留末条；不改原数据、动作时间轴或归一化统计。"""
+"""有限微调试验：可控观测采样和状态扰动；保留原数据、时间轴与归一化统计。"""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -21,7 +20,7 @@ import src.evaluate as ev
 def last_observation_indices(states, encoded_images):
     """相同PNG字节和float32状态的观测只保留最后出现的索引。"""
     last = {}
-    for i, (state, image) in enumerate(zip(states, encoded_images)):
+    for i, (state, image) in enumerate(zip(states, encoded_images, strict=True)):
         key = (np.asarray(state, dtype=np.float32).tobytes(), hashlib.sha256(image).digest())
         last[key] = i
     return sorted(last.values())
@@ -33,19 +32,35 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--steps", type=int, default=300)
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--sampling", choices=["all", "last_duplicate"], default="last_duplicate")
+    parser.add_argument("--state-noise-std", type=float, nargs=6, default=[0.] * 6,
+                        metavar=("X", "Y", "Z", "ROLL", "PITCH", "YAW"),
+                        help="Gaussian noise std in meters/radians; observation only, not targets")
     args = parser.parse_args()
+    noise_std = np.asarray(args.state_noise_std, dtype=np.float32)
+    if not np.isfinite(noise_std).all() or (noise_std < 0).any():
+        raise ValueError("state-noise-std requires six finite nonnegative numbers")
+    if args.steps < 1 or args.batch_size < 1:
+        raise ValueError("Positive training budget required")
+    source_snapshot = Path(__file__).read_bytes()
     ev.load_config(args.config)
     if args.output.exists():
         raise FileExistsError("Candidate output exists")
     args.output.mkdir(parents=True)
-    if args.steps < 1 or args.batch_size < 1:
-        raise ValueError("Positive training budget required")
+    script_snapshot = args.output / Path(__file__).name
+    script_snapshot.write_bytes(source_snapshot)
     import pandas as pd
     from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
-    source = sorted((ev.DATASET_ROOT/"data").rglob("*.parquet"))[0]
-    frame = pd.read_parquet(source, columns=["observation.state", "observation.image"])
+    sources = sorted((ev.DATASET_ROOT/"data").rglob("*.parquet"))
+    if len(sources) != 1:
+        raise ValueError("This diagnostic requires exactly one parquet file")
+    source = sources[0]
+    frame = pd.read_parquet(source, columns=["observation.state", "observation.image", "episode_index", "frame_index"])
+    if frame["episode_index"].nunique() != 1 or not np.array_equal(frame["frame_index"], np.arange(len(frame))):
+        raise ValueError("This diagnostic requires one ordered episode")
     states = np.stack(frame["observation.state"])
-    indices = last_observation_indices(states, [v["bytes"] for v in frame["observation.image"]])
+    indices = (last_observation_indices(states, [v["bytes"] for v in frame["observation.image"]])
+               if args.sampling == "last_duplicate" else list(range(len(frame))))
     (args.output/"selected_indices.json").write_text(json.dumps(indices), encoding="utf-8")
     torch.manual_seed(6); np.random.seed(6)
     policy = ev.load_policy(ev.POLICY_TYPE, Path(ev.POLICY_PATH))
@@ -60,6 +75,7 @@ def main():
     optimizer = torch.optim.AdamW(policy.parameters(), lr=1e-5, weight_decay=1e-4)
     policy.train()
     wanted = [*policy.config.input_features, "action", "action_is_pad"]
+    noise_tensor = torch.as_tensor(noise_std, device=ev.DEVICE)
     print(f"selected {len(indices)}/{len(frame)} frames; steps={args.steps}, batch={args.batch_size}", flush=True)
     iterator = iter(loader)
     start = time.perf_counter()
@@ -70,6 +86,9 @@ def main():
             except StopIteration:
                 iterator = iter(loader); sample = next(iterator)
             batch = {k:sample[k].to(ev.DEVICE) for k in wanted}
+            if np.any(noise_std):
+                state = batch["observation.state"]
+                batch["observation.state"] = state + torch.randn_like(state) * noise_tensor
             optimizer.zero_grad(set_to_none=True)
             loss, details = policy.forward(batch)
             if not torch.isfinite(loss):
@@ -96,13 +115,14 @@ def main():
     report = {"source_frames":len(frame), "selected_frames":len(indices), "optimizer_steps":args.steps,
               "batch_size":args.batch_size, "lr":1e-5, "seed":6, "seconds":time.perf_counter()-start,
               "normalization_unchanged":True,
-              "sampling":"Last occurrence of identical PNG bytes + float32 state; targets remain original i:i+chunk_size, no retiming",
+              "sampling":args.sampling,
+              "target_timing":"Original i:i+chunk_size, no retiming",
+              "state_noise_std_m_rad":noise_std.tolist(),
               "training":"Original ACT variational training forward; labels only used during training, not evaluation",
-              "scope":"Exploratory candidate, not a proven fix; additional training and sampling both change compared with original checkpoint",
+              "scope":"Exploratory candidate; compare matched training controls to separate augmentation/sampling from additional training",
               "files":{str(p.resolve()):hashlib.sha256(p.read_bytes()).hexdigest() for p in
-                       [source, Path(ev.POLICY_PATH)/"model.safetensors", args.config, Path(__file__)]}}
+                       [source, Path(ev.POLICY_PATH)/"model.safetensors", args.config, script_snapshot]}}
     (args.output/"training_summary.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-    shutil.copy2(Path(__file__), args.output/Path(__file__).name)
     print(json.dumps(report, indent=2), flush=True)
 
 

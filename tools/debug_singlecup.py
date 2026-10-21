@@ -31,6 +31,27 @@ class ReplayPolicy:
         return self.actions[index:index+1]
 
 
+class YawMeanProbe:
+    """仅诊断：向原策略提供训练均值 yaw；真实物理和评分仍读实测值。"""
+    def __init__(self, policy, mean):
+        self.policy = policy
+        self.config = policy.config
+        self.mean = float(mean)
+        self.last_state = None
+
+    def reset(self):
+        self.last_state = None
+        self.policy.reset()
+
+    def select_action(self, observation):
+        inputs = dict(observation)
+        state = observation["observation.state"].clone()
+        state[..., 5] = self.mean
+        inputs["observation.state"] = state
+        self.last_state = state.detach().cpu().numpy().tolist()
+        return self.policy.select_action(inputs)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
@@ -39,6 +60,8 @@ def main():
     parser.add_argument("--n-action-steps", type=int)
     parser.add_argument("--temporal-ensemble", type=float,
                         help="ACT temporal ensembling coefficient; recompute every step")
+    parser.add_argument("--yaw-mean", action="store_true",
+                        help="Diagnostic only: replace observed yaw by checkpoint input mean")
     args = parser.parse_args()
     ev.load_config(args.config)
     ev.require_layout()
@@ -59,6 +82,8 @@ def main():
     obj_init = np.asarray(data["obj_init"].iloc[0])
     print(f"MODE={args.mode} steps={ev.MAX_ACTION_STEPS} hz={ev.ENV_HZ}", flush=True)
     if args.mode == "replay":
+        if args.yaw_mean:
+            raise ValueError("yaw-mean is only meaningful for ACT")
         policy = ReplayPolicy(actions, ev.DEVICE)
         ev.POLICY_TYPE = "demo_replay"
     else:
@@ -75,6 +100,9 @@ def main():
             policy.config.temporal_ensemble_coeff = args.temporal_ensemble
             policy.temporal_ensembler = ACTTemporalEnsembler(args.temporal_ensemble, policy.config.chunk_size)
         print(f"ACT n_action_steps={policy.config.n_action_steps}", flush=True)
+        if args.yaw_mean:
+            mean = policy.state_dict()["normalize_inputs.buffer_observation_state.mean"][5]
+            policy = YawMeanProbe(policy, mean)
 
     def factory(xml_path, **kwargs):
         env = make_single_cup_env(xml_path, obj_init=obj_init, **kwargs)
@@ -89,6 +117,8 @@ def main():
             if first_time is None:
                 first_time = row["sim_time_s"]
             row["observed_elapsed_s"] = row["sim_time_s"] - first_time
+            if isinstance(policy, YawMeanProbe):
+                row["policy_input_state"] = policy.last_state
             i = row["step"]
             for key in ["ee_pose", "action_raw", "action_sent", "joint_state"]:
                 assert np.isfinite(np.asarray(row[key])).all()
@@ -109,9 +139,13 @@ def main():
     gaps = [r["demo_position_gap_mm"] for r in rows if "demo_position_gap_mm" in r]
     report = {"mode":args.mode, "n_action_steps":policy.config.n_action_steps if args.mode == "act" else None,
               "temporal_ensemble_coeff":args.temporal_ensemble,
+              "yaw_mean_probe":args.yaw_mean,
               "trajectory_rows":n_rows, "demo_position_gap_mm":{"median":float(np.median(gaps)), "max":float(np.max(gaps))},
               "result":result,
-              "notes":["Replay uses recorded commands and is not model inference." if args.mode == "replay" else "ACT uses live images and measured states; no action labels are supplied.",
+              "notes":["Replay uses recorded commands and is not model inference." if args.mode == "replay" else
+                       ("ACT uses live images and measured xyz/roll/pitch, with yaw replaced by its training mean; no action labels." if args.yaw_mean else
+                        "ACT uses live images and measured states; no action labels are supplied."),
+                       "Diagnostic yaw substitution is active; not a validated general policy fix." if args.yaw_mean else "No observation substitution.",
                        "Step ordering, dynamics, state input, and success thresholds follow original evaluator."]}
     (args.output/"summary.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     files = [Path(__file__), args.config, REPO/"src/evaluate.py", REPO/"src/single_cup_env.py", REPO/"src/success.py", source,

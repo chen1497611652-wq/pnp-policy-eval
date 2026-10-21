@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-20",
+  "scope": "Single-cup seed 6; exploratory runs, no validated fix; baseline imported from earlier archive. See docs/act-singlecup-debug.md.",
+  "copies": [
+    {
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\report\\experiments.json",
+      "archived": "results\\act_singlecup_debug_20261020_experiments.json",
+      "sha256": "a327b9bb83d958f1285f679ab8384d07568969be5de1f9f0b170b78a57b0c623"
+    },
+    {
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\input_diagnosis.json",
+      "archived": "results\\act_singlecup_debug_20261020_inputs.json",
+      "sha256": "c227c0e9f50235b7b71860a14ada96e2d02cecbb8e4db9873fa71432fb2a7418"
+    },
+    {
+      "source": "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\input_diagnosis_yaw_noise.json",
+      "archived": "results\\act_singlecup_debug_20261020_inputs_yaw_noise.json",
+      "sha256": "a66b4febdcf227c2a92da8c6e5c6644d9fbc91a57694ef58bf6d7b22ee1c76b2"
+    }
+  ],
+  "local_support": {
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_ensemble001\\summary.json": "1bfa31bd92ff5b1ca656d036c74ed5d5b230c64360dbb49f45e1a2788a8fd304",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_finetuned_last_duplicate\\summary.json": "2a8a2d5da4126d28cadefd1258d1e4d28eb7768dba1f44023dd78735d4dbaa01",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_finetuned_yaw_noise\\summary.json": "2c16595a3cb108469dfde790b4bea06fb8b13fb8abe60288d6f0a5e63ffd0c87",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_replan1\\summary.json": "9278583e32673402adc251ee6b912e7e1324f098fb7fee3da6aa9bc72fcc7da4",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_yaw_mean\\summary.json": "1f507ed2793cef9d3658b26341e3a6bf6ecb6d25e254f26a9324f8a39a1ed216",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\replay\\summary.json": "06cd0a24871c0872230d4d0db8ab102e2f7b17d312d8e7095905c55511a3384b",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_ensemble001\\manifest.json": "f72548c12b254e793b867403b6060ad687ca930226efc921227dbb00b0ebbddd",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_finetuned_last_duplicate\\manifest.json": "0fe59130d611f7fbc20c8fd2137db4d9e8aa8779b0b49e6a30b0eb3952581f97",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_finetuned_yaw_noise\\manifest.json": "31f197b49e76f66351929810a415cb35394158d260591a8319c1be2d61f5b128",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_replan1\\manifest.json": "cb0a0586b5d41df1ce7b9963b87a5cebfad88fb9df768a0d071e3a8a235ba606",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\act_yaw_mean\\manifest.json": "c4b925040e175d56a8e5cdc96f711790e4e64d784d90051b17784f851aec9cee",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\replay\\manifest.json": "dce61fb2708c58d2f1cc9f395fb57cacd9435e6327dff7031fb4f2e7e9abf519",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\finetune_last_duplicate\\training_summary.json": "c0e58495d5829a63d241c488165ef34b90c8506cd933bdd9dfb18b0993aee76b",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\finetune_yaw_noise\\training_summary.json": "c47dbd5077d58eab1cb948d0e8fe8c11e58854e910d69eee9b9937a1010601c1",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\finetune_yaw_noise\\source_provenance.json": "2f5f019bf0b9fecd9973c3f35a43909a367d1ed5997e6cda518e48000600c2ca",
+    "D:\\lerobot-mujoco-tutorial\\outputs\\act_singlecup_debug_20261020\\finetune_yaw_noise\\executed_source_reconstructed.py": "bfcfae22f0554d892d0dde59add2855a8009f26c9a53333d00da1dbfbe7d5a94"
+  }
+}
