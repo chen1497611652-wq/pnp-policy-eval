@@ -19,6 +19,10 @@ data/
 # 视频体积大, 不进版本库; JSONL 是证据, 要进
 *.mp4
 results/*.png
+# README 使用的 DAY20 结果图
+!results/smolvla_d15_seeds6-11_success_rate.png
+!results/smolvla_d15_seeds6-11_max_lift.png
+!results/smolvla_d15_seeds6-11_uprightness.png
 
 # 编辑器
 .vscode/

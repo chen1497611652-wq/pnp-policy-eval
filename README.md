@@ -204,6 +204,24 @@ python tools/trace_rollout.py --config configs/act_y_singlecup_run.yaml --single
 - Pi0 尚未完成实际加载与闭环验证。
 - 本仓库尚未包含完整依赖锁定文件、数据集和权重，不能仅克隆仓库就复现完整闭环；本机记录一致也不保证跨机器逐位一致。
 
+### SmolVLA 六条评测记录的图表分析
+
+本次分析使用已有的 seed 6～11 评测记录，通过绘图检查本批成功率、最大抬升高度和最终直立度，没有重新运行模型或仿真。
+
+本批 SmolVLA 评测包含 seed 6～11，共 6 条记录。其中 4 次严格成功、2 次失败，本批成功率为 66.67%，失败记录为 seed 8 和 seed 11。
+
+![SmolVLA 本批严格成功率](results/smolvla_d15_seeds6-11_success_rate.png)
+
+最大抬升高度图显示，seed 8 的最大抬升约为 1.85 厘米，没有达到 3 厘米的要求；seed 11 约为 4.07 厘米，达到了抬升高度要求，但仍未严格成功。
+
+ ![SmolVLA 各 seed 的最大抬升高度](results/smolvla_d15_seeds6-11_max_lift.png)
+
+最终直立度图显示，seed 8 和 seed 11 的最终直立度都约为 0.21，低于 0.7 的要求，其余四条记录均接近 1。 
+
+![SmolVLA 各 seed 的最终直立度](results/smolvla_d15_seeds6-11_uprightness.png)
+
+这些结果说明，达到抬升高度要求并不足以保证任务成功，还需要满足直立等其他条件。上述结论仅针对这 6 条记录，不能据此确定模型的整体成功率，也不能确定失败的根本原因。
+
 ## 问题发现与诊断记录
 
 - [动作标签语义](docs/finding-01-action-semantics.md)：说明特定坏数据中 `action` 记录实测关节角而非命令目标的问题，附 FK 检查工具和适用边界；不能据此认定当前 ACT 失败仍是同一个旧问题。
